@@ -1,10 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { toNodeHandler } from "better-auth/node";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import express, { Application, Request, Response } from "express";
+import cron from "node-cron";
+import path from "path";
+import qs from "qs";
+import { envVars } from "./app/config/env";
+import { auth } from "./app/lib/auth";
+import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
+import { notFound } from "./app/middleware/notFound";
 import { IndexRoutes } from "./app/routes";
 
 const app: Application = express();
-
 
 
 // Enable URL-encoded form data parsing
@@ -27,7 +35,8 @@ app.get('/', async (req: Request, res: Response) => {
     })
 });
 
-
+app.use(globalErrorHandler)
+app.use(notFound)
 
 
 export default app;
