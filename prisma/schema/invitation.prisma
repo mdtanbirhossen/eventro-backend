@@ -1,0 +1,26 @@
+model Invitation {
+    id        String           @id @default(uuid())
+    status    InvitationStatus @default(PENDING)
+    message   String? // optional personal note from host
+    expiresAt DateTime?
+    createdAt DateTime         @default(now())
+    updatedAt DateTime         @updatedAt
+
+    eventId String
+    event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+    invitedById String
+    invitedBy   User   @relation("invitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+
+    invitedUserId String
+    invitedUser   User   @relation("invitedUser", fields: [invitedUserId], references: [id], onDelete: Cascade)
+
+    paymentId String?  @unique
+    payment   Payment? @relation(fields: [paymentId], references: [id])
+
+    @@unique([eventId, invitedUserId])
+    @@index([eventId])
+    @@index([invitedUserId])
+    @@index([invitedById])
+    @@map("invitation")
+}

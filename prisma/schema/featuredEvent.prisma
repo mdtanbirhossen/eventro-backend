@@ -1,0 +1,10 @@
+model FeaturedEvent {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    eventId String @unique
+    event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+    @@map("featured_event")
+}

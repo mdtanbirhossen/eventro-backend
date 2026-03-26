@@ -15,10 +15,57 @@ enum Gender {
   OTHER
 }
 
+enum EventVisibility {
+  PUBLIC
+  PRIVATE
+}
 
+enum EventFeeType {
+  FREE
+  PAID
+}
 
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum ParticipantStatus {
+  PENDING // awaiting host approval
+  APPROVED // confirmed participant
+  REJECTED // host rejected the request
+  BANNED // removed by host after joining
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
 
 enum PaymentStatus {
-  PAID
   UNPAID
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum PaymentProvider {
+  STRIPE
+  SSLCOMMERZ
+}
+
+enum NotificationType {
+  JOIN_REQUEST // someone requested to join your event
+  REQUEST_APPROVED // your join request was approved
+  REQUEST_REJECTED // your join request was rejected
+  INVITATION_RECEIVED // you received an invitation
+  PARTICIPANT_BANNED // you were banned from an event
+  PAYMENT_SUCCESS // payment confirmed
+  PAYMENT_FAILED // payment failed
+  EVENT_UPDATED // an event you joined was updated
+  EVENT_CANCELLED // an event you joined was cancelled
+  REVIEW_RECEIVED // someone reviewed your event
 }

@@ -1,0 +1,23 @@
+model EventParticipant {
+    id        String            @id @default(uuid())
+    status    ParticipantStatus @default(PENDING)
+    joinedAt  DateTime? // set when host approves
+    bannedAt  DateTime?
+    banReason String? // reason supplied by host on ban
+    createdAt DateTime          @default(now())
+    updatedAt DateTime          @updatedAt
+
+    eventId String
+    event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    paymentId String?  @unique
+    payment   Payment? @relation(fields: [paymentId], references: [id])
+
+    @@unique([eventId, userId])
+    @@index([eventId])
+    @@index([userId])
+    @@map("event_participant")
+}

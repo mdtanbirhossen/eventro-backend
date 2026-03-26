@@ -1,0 +1,41 @@
+model Event {
+    id              String          @id @default(uuid())
+    title           String
+    slug            String          @unique
+    description     String          @db.Text
+    date            DateTime // event start date
+    time            String // e.g. "18:00" — stored as string for flexibility
+    endDate         DateTime? // optional end date/time
+    venue           String? // null for online events
+    eventLink       String? // for online events
+    banner          String? // cover image / banner
+    visibility      EventVisibility @default(PUBLIC)
+    feeType         EventFeeType    @default(FREE)
+    registrationFee Decimal         @default(0) @db.Decimal(10, 2)
+    currency        String          @default("BDT")
+    status          EventStatus     @default(PUBLISHED)
+    isFeatured      Boolean         @default(false) // quick-query flag; mirrored in FeaturedEvent
+    maxCapacity     Int? // null = unlimited
+    isDeleted       Boolean         @default(false)
+    deletedAt       DateTime?
+    createdAt       DateTime        @default(now())
+    updatedAt       DateTime        @updatedAt
+
+    ownerId String
+    owner   User   @relation("OwnedEvents", fields: [ownerId], references: [id], onDelete: Cascade)
+
+    categoryId String?
+    category   EventCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+    participants  EventParticipant[]
+    invitations   Invitation[]
+    reviews       Review[]
+    payments      Payment[]
+    featuredEvent FeaturedEvent?
+
+    @@index([ownerId])
+    @@index([categoryId])
+    @@index([visibility, status])
+    @@index([date])
+    @@map("event")
+}
