@@ -8,17 +8,14 @@ import AppError from "../errorHelpers/AppError";
 import { handlePrismaClientKnownRequestError, handlePrismaClientUnknownError, handlePrismaClientValidationError, handlerPrismaClientInitializationError, handlerPrismaClientRustPanicError } from "../errorHelpers/handlePrismaErrors";
 import { handleZodError } from "../errorHelpers/handleZodError";
 import { TErrorResponse, TErrorSources } from "../interfaces/error.interface";
-import { deleteUploadedFilesFromGlobalErrorHandler } from "../utils/deleteUploadedFilesFromGlobalErrorHandler";
 
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const globalErrorHandler = async (err: any, req: Request, res: Response, next: NextFunction) => {
     if (envVars.NODE_ENV === 'development') {
-        console.log("Error from Global Error Handler", err);
+        console.log("Global Error Handler", err);
     }
-    // deleted updated files
-    await deleteUploadedFilesFromGlobalErrorHandler(req);
 
     let errorSources: TErrorSources[] = []
     let statusCode: number = status.INTERNAL_SERVER_ERROR;
