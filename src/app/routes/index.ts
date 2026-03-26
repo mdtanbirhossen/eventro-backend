@@ -7,6 +7,7 @@ import { EventRoutes } from "../module/event/event.route";
 import { EventCategoryRoutes } from "../module/eventCategory/eventCategory.route";
 import { ReviewRoutes } from "../module/review/review.route";
 import { NotificationRoutes } from "../module/notification/notification.route";
+import { PaymentRoutes } from "../module/payment/payment.route";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/events", EventRoutes);
 router.use("/event-categories", EventCategoryRoutes);
 router.use("/reviews", ReviewRoutes);
 router.use("/notifications", NotificationRoutes);
+router.use("/payment", PaymentRoutes);
 
 export const IndexRoutes = router;
