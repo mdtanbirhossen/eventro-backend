@@ -62,6 +62,8 @@ enum NotificationType {
   REQUEST_APPROVED // your join request was approved
   REQUEST_REJECTED // your join request was rejected
   INVITATION_RECEIVED // you received an invitation
+  INVITATION_DECLINED
+  INVITATION_ACCEPTED
   PARTICIPANT_BANNED // you were banned from an event
   PAYMENT_SUCCESS // payment confirmed
   PAYMENT_FAILED // payment failed
