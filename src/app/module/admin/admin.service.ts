@@ -12,7 +12,6 @@ import {
 import { auth } from "../../lib/auth";
 
 const createAdmin = async (payload: ICreateAdminPayload) => {
-
     const userExists = await prisma.user.findUnique({
         where: {
             email: payload.admin.email,
@@ -45,7 +44,11 @@ const createAdmin = async (payload: ICreateAdminPayload) => {
 };
 
 const getAllAdmins = async () => {
-    const admins = await prisma.user.findMany();
+    const admins = await prisma.user.findMany({
+        where: {
+            role: Role.ADMIN,
+        },
+    });
     return admins;
 };
 
