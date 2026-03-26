@@ -1,6 +1,6 @@
-import dotenv from 'dotenv';
-import status from 'http-status';
-import AppError from '../errorHelpers/AppError';
+import dotenv from "dotenv";
+import status from "http-status";
+import AppError from "../errorHelpers/AppError";
 
 dotenv.config();
 
@@ -16,63 +16,80 @@ interface EnvConfig {
     REFRESH_TOKEN_EXPIRES_IN: string;
     BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN: string;
     BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE: string;
-    EMAIL_SENDER:{
+    EMAIL_SENDER: {
         SMTP_USER: string;
         SMTP_PASS: string;
         SMTP_HOST: string;
         SMTP_PORT: string;
         SMTP_FROM: string;
-    }
+    };
     GOOGLE_CLIENT_ID: string;
     GOOGLE_CLIENT_SECRET: string;
     GOOGLE_CALLBACK_URL: string;
     FRONTEND_URL: string;
-    CLOUDINARY:{
+    CLOUDINARY: {
         CLOUDINARY_CLOUD_NAME: string;
         CLOUDINARY_API_KEY: string;
         CLOUDINARY_API_SECRET: string;
-    },
+    };
     ADMIN_EMAIL: string;
     ADMIN_PASSWORD: string;
+    SSLCOMMERZ: {
+        STORE_ID: string;
+        STORE_PASSWORD: string;
+        BASE_URL: string;
+        SUCCESS_URL: string;
+        FAIL_URL: string;
+        CANCEL_URL: string;
+        IPN_URL: string;
+    };
 }
 
-
 const loadEnvVariables = (): EnvConfig => {
-
     const requireEnvVariable = [
-        'NODE_ENV',
-        'PORT',
-        'DATABASE_URL',
-        'BETTER_AUTH_SECRET',
-        'BETTER_AUTH_URL',
-        'ACCESS_TOKEN_SECRET',
-        'REFRESH_TOKEN_SECRET',
-        'ACCESS_TOKEN_EXPIRES_IN',
-        'REFRESH_TOKEN_EXPIRES_IN',
-        'BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN',
-        'BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE',
-        'EMAIL_SENDER_SMTP_USER',
-        'EMAIL_SENDER_SMTP_PASS',
-        'EMAIL_SENDER_SMTP_HOST',
-        'EMAIL_SENDER_SMTP_PORT',
-        'EMAIL_SENDER_SMTP_FROM',
-        'GOOGLE_CLIENT_ID',
-        'GOOGLE_CLIENT_SECRET',
-        'GOOGLE_CALLBACK_URL',
-        'FRONTEND_URL',
-        'CLOUDINARY_CLOUD_NAME',
-        'CLOUDINARY_API_KEY',
-        'CLOUDINARY_API_SECRET',
-        'ADMIN_EMAIL',
-        'ADMIN_PASSWORD',
-    ]
+        "NODE_ENV",
+        "PORT",
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "ACCESS_TOKEN_SECRET",
+        "REFRESH_TOKEN_SECRET",
+        "ACCESS_TOKEN_EXPIRES_IN",
+        "REFRESH_TOKEN_EXPIRES_IN",
+        "BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN",
+        "BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE",
+        "EMAIL_SENDER_SMTP_USER",
+        "EMAIL_SENDER_SMTP_PASS",
+        "EMAIL_SENDER_SMTP_HOST",
+        "EMAIL_SENDER_SMTP_PORT",
+        "EMAIL_SENDER_SMTP_FROM",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_CALLBACK_URL",
+        "FRONTEND_URL",
+        "CLOUDINARY_CLOUD_NAME",
+        "CLOUDINARY_API_KEY",
+        "CLOUDINARY_API_SECRET",
+        "ADMIN_EMAIL",
+        "ADMIN_PASSWORD",
+        "SSLCOMMERZ_STORE_ID",
+        "SSLCOMMERZ_STORE_PASSWORD",
+        "SSLCOMMERZ_BASE_URL",
+        "SSLCOMMERZ_SUCCESS_URL",
+        "SSLCOMMERZ_FAIL_URL",
+        "SSLCOMMERZ_CANCEL_URL",
+        "SSLCOMMERZ_IPN_URL",
+    ];
 
     requireEnvVariable.forEach((variable) => {
         if (!process.env[variable]) {
             // throw new Error(`Environment variable ${variable} is required but not set in .env file.`);
-            throw new AppError(status.INTERNAL_SERVER_ERROR, `Environment variable ${variable} is required but not set in .env file.`);
+            throw new AppError(
+                status.INTERNAL_SERVER_ERROR,
+                `Environment variable ${variable} is required but not set in .env file.`,
+            );
         }
-    })
+    });
 
     return {
         NODE_ENV: process.env.NODE_ENV as string,
@@ -83,9 +100,12 @@ const loadEnvVariables = (): EnvConfig => {
         ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET as string,
         REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET as string,
         ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN as string,
-        REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN as string,
-        BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN: process.env.BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN as string,
-        BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE: process.env.BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE as string,
+        REFRESH_TOKEN_EXPIRES_IN: process.env
+            .REFRESH_TOKEN_EXPIRES_IN as string,
+        BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN: process.env
+            .BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN as string,
+        BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE: process.env
+            .BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE as string,
         EMAIL_SENDER: {
             SMTP_USER: process.env.EMAIL_SENDER_SMTP_USER as string,
             SMTP_PASS: process.env.EMAIL_SENDER_SMTP_PASS as string,
@@ -104,7 +124,16 @@ const loadEnvVariables = (): EnvConfig => {
         },
         ADMIN_EMAIL: process.env.ADMIN_EMAIL as string,
         ADMIN_PASSWORD: process.env.ADMIN_PASSWORD as string,
-    }
-}
+        SSLCOMMERZ: {
+            STORE_ID: process.env.SSLCOMMERZ_STORE_ID as string,
+            STORE_PASSWORD: process.env.SSLCOMMERZ_STORE_PASSWORD as string,
+            BASE_URL: process.env.SSLCOMMERZ_BASE_URL as string,
+            SUCCESS_URL: process.env.SSLCOMMERZ_SUCCESS_URL as string,
+            FAIL_URL: process.env.SSLCOMMERZ_FAIL_URL as string,
+            CANCEL_URL: process.env.SSLCOMMERZ_CANCEL_URL as string,
+            IPN_URL: process.env.SSLCOMMERZ_IPN_URL as string,
+        },
+    };
+};
 
 export const envVars = loadEnvVariables();

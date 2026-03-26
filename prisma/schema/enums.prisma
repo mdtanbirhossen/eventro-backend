@@ -48,6 +48,7 @@ enum InvitationStatus {
 enum PaymentStatus {
   UNPAID
   PAID
+  CANCELLED
   REFUNDED
   FAILED
 }
