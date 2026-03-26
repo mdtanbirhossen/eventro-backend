@@ -26,15 +26,13 @@ export const seedAdmin = async () => {
             },
         });
 
-        await prisma.$transaction(async (tx) => {
-            await tx.user.update({
-                where: {
-                    id: adminUser.user.id,
-                },
-                data: {
-                    emailVerified: true,
-                },
-            });
+        await prisma.user.update({
+            where: {
+                id: adminUser.user.id,
+            },
+            data: {
+                emailVerified: true,
+            },
         });
 
         const admin = await prisma.user.findFirst({
