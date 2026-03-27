@@ -186,6 +186,7 @@ const getNewToken = async (refreshToken: string, sessionToken: string) => {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
         sessionToken: token,
+        user: isSessionTokenExists.user,
     };
 };
 
@@ -252,9 +253,6 @@ const logoutUser = async (sessionToken: string) => {
 
     return result;
 };
-
-
-
 
 export const AuthService = {
     register,

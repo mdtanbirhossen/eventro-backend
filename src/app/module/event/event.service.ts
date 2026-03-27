@@ -383,7 +383,7 @@ const setFeaturedEvent = async (eventId: string) => {
     if (!event)
         throw new AppError(status.NOT_FOUND, "Published event not found");
 
-    // Unfeature any existing featured event
+    // Un feature any existing featured event
     await prisma.$transaction([
         prisma.event.updateMany({
             where: { isFeatured: true },

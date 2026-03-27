@@ -83,12 +83,12 @@ const getNewToken = catchAsync(async (req: Request, res: Response) => {
         betterAuthSessionToken,
     );
 
-    const { accessToken, refreshToken: newRefreshToken, sessionToken } = result;
+    const { user, accessToken, refreshToken: newRefreshToken, sessionToken } = result;
 
     tokenUtils.setAccessTokenCookie(res, accessToken);
     tokenUtils.setRefreshTokenCookie(res, newRefreshToken);
     tokenUtils.setBetterAuthSessionCookie(res, sessionToken);
-
+    
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -97,6 +97,7 @@ const getNewToken = catchAsync(async (req: Request, res: Response) => {
             accessToken,
             refreshToken: newRefreshToken,
             sessionToken,
+            user
         },
     });
 });
