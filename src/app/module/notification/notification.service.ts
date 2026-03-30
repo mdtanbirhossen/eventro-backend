@@ -26,7 +26,7 @@ const createNotification = async (payload: ICreateNotificationPayload) => {
 
 const getMyNotifications = async (
     userId: string,
-    query: { page?: string; limit?: string; unread?: string }
+    query: { page?: string; limit?: string; unread?: string },
 ) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
@@ -58,7 +58,7 @@ const getMyNotifications = async (
             page,
             limit,
             total,
-            totalPage: Math.ceil(total / limit),
+            totalPages: Math.ceil(total / limit),
         },
         data: notifications,
     };
@@ -85,7 +85,10 @@ const markAsRead = async (userId: string, notificationId: string) => {
     }
 
     if (notification.userId !== userId) {
-        throw new AppError(status.FORBIDDEN, "You are not allowed to access this notification!");
+        throw new AppError(
+            status.FORBIDDEN,
+            "You are not allowed to access this notification!",
+        );
     }
 
     const updatedNotification = await prisma.notification.update({
@@ -124,7 +127,10 @@ const deleteNotification = async (userId: string, notificationId: string) => {
     }
 
     if (notification.userId !== userId) {
-        throw new AppError(status.FORBIDDEN, "You are not allowed to delete this notification!");
+        throw new AppError(
+            status.FORBIDDEN,
+            "You are not allowed to delete this notification!",
+        );
     }
 
     const deleted = await prisma.notification.delete({

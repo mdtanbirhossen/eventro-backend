@@ -7,7 +7,7 @@ import { NotificationService } from "./notification.service";
 const getMyNotifications = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user.userId;
 
-    const result = await NotificationService.getMyNotifications(
+    const {data, meta} = await NotificationService.getMyNotifications(
         userId,
         req.query,
     );
@@ -16,7 +16,8 @@ const getMyNotifications = catchAsync(async (req: Request, res: Response) => {
         httpStatusCode: status.OK,
         success: true,
         message: "Notifications fetched successfully",
-        data: result,
+        data: data,
+        meta: meta,
     });
 });
 
