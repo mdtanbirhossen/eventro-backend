@@ -4,11 +4,7 @@ import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 
 const getAllUsers = async () => {
-    const users = await prisma.user.findMany({
-        where: {
-            role: Role.USER,
-        },
-    });
+    const users = await prisma.user.findMany();
     return users;
 };
 

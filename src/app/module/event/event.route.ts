@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Role } from "../../../generated/prisma/enums";
 import { EventController } from "./event.controller";
 import { checkAuth } from "../../middleware/checkAuth";
+import { optionalCheckAuth } from "../../middleware/optionalCheckAuth";
 
 const router = Router();
 
@@ -16,7 +17,7 @@ router.get("/", EventController.getAllEvents);
 // Private event visibility is enforced inside the service using req.user?.userId.
 // We intentionally do NOT gate this with checkAuth so unauthenticated users can
 // still reach public event pages; the service returns 403 for private events.
-router.get("/:id", EventController.getEventById);
+router.get("/:id", optionalCheckAuth(), EventController.getEventById);
 
 // ─────────────────────────────────────────────
 // AUTHENTICATED USER ROUTES  (any logged-in role)
