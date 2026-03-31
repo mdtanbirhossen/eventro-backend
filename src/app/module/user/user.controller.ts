@@ -25,7 +25,24 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const searchUsers = catchAsync(async (req: Request, res: Response) => {
+    const result = await UserService.searchUsers({
+        search: req.query.search as string | undefined,
+        limit: req.query.limit as string | undefined,
+        page: req.query.page as string | undefined,
+    });
+
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Users fetched successfully",
+        data: result.data,
+        meta: result.meta,
+    });
+});
+
 export const UserController = {
     getAllUsers,
-    getUserById
+    getUserById,
+    searchUsers,
 };
