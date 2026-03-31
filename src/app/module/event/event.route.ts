@@ -74,6 +74,19 @@ router.post(
     EventController.inviteUser,
 );
 
+// send bulk invitation
+router.post(
+    "/:id/bulk-invite",
+    checkAuth(Role.USER, Role.ADMIN),
+    EventController.sendBulkInvitations,   // handles both single & bulk
+);
+ 
+router.get(
+    "/:id/invitations",
+    checkAuth(Role.USER, Role.ADMIN),
+    EventController.getEventInvitations,   // fetch existing invitations
+);
+
 // Participant management (owner only — ownership re-checked in service)
 router.get(
     "/:id/participants",

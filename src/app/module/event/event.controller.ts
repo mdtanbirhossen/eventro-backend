@@ -301,6 +301,57 @@ const getMyParticipation = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+/**
+ * POST /events/:id/invite
+ * Replaces the single-user inviteUser controller.
+ * Accepts { invitedUserIds: string[], message?: string }
+ * Returns summary + successful + failed arrays.
+ */
+const sendBulkInvitations = catchAsync(async (req: Request, res: Response) => {
+    const invitedById = req.user!.userId;
+    const { invitedUserIds, message } = req.body;
+
+    // ── backwards compat: support single invitedUserId too ──
+    const userIds: string[] =
+        invitedUserIds ??
+        (req.body.invitedUserId ? [req.body.invitedUserId] : []);
+
+    const result = await EventService.sendBulkInvitations(
+        req.params.id as string,
+        invitedById,
+        userIds,
+        message,
+    );
+
+    sendResponse(res, {
+        httpStatusCode: status.CREATED,
+        success: true,
+        message: `${result.summary.successCount} invitation(s) sent successfully`,
+        data: result,
+    });
+});
+
+/**
+ * GET /events/:id/invitations
+ * Returns all invitations for an event (owner only).
+ * Frontend uses this to filter out already-invited users.
+ */
+const getEventInvitations = catchAsync(async (req: Request, res: Response) => {
+    const ownerId = req.user!.userId;
+
+    const result = await EventService.getEventInvitations(
+        req.params.id as string,
+        ownerId,
+    );
+
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Event invitations fetched successfully",
+        data: result,
+    });
+});
+
 export const EventController = {
     createEvent,
     getAllEvents,
@@ -321,4 +372,6 @@ export const EventController = {
     respondToInvitation,
     getMyEvents,
     getMyParticipation,
+    sendBulkInvitations,
+    getEventInvitations,
 };

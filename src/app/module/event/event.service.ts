@@ -811,6 +811,145 @@ const getMyParticipation = async (userId: string) => {
     });
 };
 
+// ─────────────────────────────────────────────
+// BULK INVITATIONS
+// ─────────────────────────────────────────────
+
+/**
+ * POST /events/:eventId/invite
+ * Accepts multiple invitedUserIds in one request.
+ * Processes each one individually and returns a summary
+ * so the frontend can show success/failure per user.
+ */
+const sendBulkInvitations = async (
+    eventId: string,
+    invitedById: string,
+    invitedUserIds: string[],
+    message?: string,
+) => {
+    // ownership check — only the event owner can invite
+    const event = await assertEventOwner(eventId, invitedById);
+
+    if (!invitedUserIds || invitedUserIds.length === 0) {
+        throw new AppError(status.BAD_REQUEST, "No users to invite");
+    }
+
+    // remove duplicates
+    const uniqueIds = [...new Set(invitedUserIds)];
+
+    // remove self-invite
+    const filteredIds = uniqueIds.filter((id) => id !== invitedById);
+
+    const successful: { userId: string; invitationId: string }[] = [];
+    const failed: { userId: string; reason: string }[] = [];
+
+    // process each user individually so one failure doesn't block the rest
+    for (const invitedUserId of filteredIds) {
+        try {
+            // check user exists
+            const invitedUser = await prisma.user.findUnique({
+                where: { id: invitedUserId },
+                select: { id: true, name: true },
+            });
+
+            if (!invitedUser) {
+                failed.push({
+                    userId: invitedUserId,
+                    reason: "User not found",
+                });
+                continue;
+            }
+
+            // check not already invited
+            const existing = await prisma.invitation.findUnique({
+                where: {
+                    eventId_invitedUserId: { eventId, invitedUserId },
+                },
+            });
+
+            if (existing) {
+                failed.push({
+                    userId: invitedUserId,
+                    reason: "User has already been invited",
+                });
+                continue;
+            }
+
+            // create invitation + send notification in a transaction
+            const invitation = await prisma.$transaction(async (tx) => {
+                const inv = await tx.invitation.create({
+                    data: { eventId, invitedById, invitedUserId, message },
+                });
+
+                await tx.notification.create({
+                    data: {
+                        userId: invitedUserId,
+                        type: NotificationType.INVITATION_RECEIVED,
+                        title: "New Event Invitation",
+                        message: `You have been invited to join "${event.title}"`,
+                        metadata: {
+                            eventId,
+                            invitationId: inv.id,
+                            invitedById,
+                        },
+                    },
+                });
+
+                return inv;
+            });
+
+            successful.push({
+                userId: invitedUserId,
+                invitationId: invitation.id,
+            });
+        } catch (err: any) {
+            failed.push({
+                userId: invitedUserId,
+                reason: err?.message ?? "Unknown error",
+            });
+        }
+    }
+
+    return {
+        summary: {
+            total: filteredIds.length,
+            successCount: successful.length,
+            failedCount: failed.length,
+        },
+        successful,
+        failed,
+    };
+};
+
+// ─────────────────────────────────────────────
+// GET EVENT INVITATIONS (for filtering already-invited users)
+// ─────────────────────────────────────────────
+
+/**
+ * GET /events/:eventId/invitations
+ * Returns minimal invitation data so the frontend can
+ * grey out / exclude already-invited users from search results.
+ * Only the event owner can call this.
+ */
+const getEventInvitations = async (eventId: string, ownerId: string) => {
+    await assertEventOwner(eventId, ownerId);
+
+    const invitations = await prisma.invitation.findMany({
+        where: { eventId },
+        select: {
+            id: true,
+            invitedUserId: true,
+            status: true,
+            createdAt: true,
+            invitedUser: {
+                select: { id: true, name: true, email: true, image: true },
+            },
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
+    return invitations;
+};
 export const EventService = {
     // Event CRUD
     createEvent,
@@ -842,4 +981,8 @@ export const EventService = {
     // Dashboard
     getMyEvents,
     getMyParticipation,
+
+    // bulk invitation
+    sendBulkInvitations,
+    getEventInvitations,
 };
