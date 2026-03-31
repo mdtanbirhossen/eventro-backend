@@ -136,13 +136,43 @@ const setFeaturedEvent = catchAsync(async (req: Request, res: Response) => {
 // PARTICIPATION
 // ─────────────────────────────────────────────
 
+// const joinEvent = catchAsync(async (req: Request, res: Response) => {
+//     const userId = req.user!.userId;
+//     const result = await EventService.joinEvent(
+//         req.params.id as string,
+//         userId,
+//     );
+
+//     sendResponse(res, {
+//         httpStatusCode: status.CREATED,
+//         success: true,
+//         message:
+//             result.status === "APPROVED"
+//                 ? "Joined event successfully"
+//                 : "Join request sent, awaiting approval",
+//         data: result,
+//     });
+// });
+
 const joinEvent = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user!.userId;
+
     const result = await EventService.joinEvent(
         req.params.id as string,
         userId,
     );
 
+    // ✅ paid event response
+    if ((result as any).status === "PAYMENT_REQUIRED") {
+        return sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Payment required to join this event",
+            data: result,
+        });
+    }
+
+    // ✅ free event response
     sendResponse(res, {
         httpStatusCode: status.CREATED,
         success: true,

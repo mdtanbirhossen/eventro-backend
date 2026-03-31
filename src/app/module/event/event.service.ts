@@ -11,6 +11,7 @@ import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { TCreateEvent, TEventQuery, TUpdateEvent } from "./event.interface";
 import { Prisma } from "../../../generated/prisma/client";
+import { PaymentService } from "../payment/payment.service";
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -422,63 +423,138 @@ const getFeaturedEvent = async () => {
 // PARTICIPATION
 // ─────────────────────────────────────────────
 
+// const joinEvent = async (eventId: string, userId: string) => {
+//     const event = await prisma.event.findFirst({
+//         where: { id: eventId, isDeleted: false, status: EventStatus.PUBLISHED },
+//     });
+
+//     if (!event) throw new AppError(status.NOT_FOUND, "Event not found");
+
+//     const existing = await prisma.eventParticipant.findUnique({
+//         where: { eventId_userId: { eventId, userId } },
+//     });
+
+//     if (existing) {
+//         if (existing.status === ParticipantStatus.BANNED)
+//             throw new AppError(
+//                 status.FORBIDDEN,
+//                 "You have been banned from this event",
+//             );
+
+//         throw new AppError(
+//             status.CONFLICT,
+//             "You have already joined or requested to join this event",
+//         );
+//     }
+
+//     const autoApprove =
+//         event.visibility === EventVisibility.PUBLIC &&
+//         event.feeType === EventFeeType.FREE;
+
+//     const participant = await prisma.$transaction(async (tx) => {
+//         const created = await tx.eventParticipant.create({
+//             data: {
+//                 eventId,
+//                 userId,
+//                 status: autoApprove
+//                     ? ParticipantStatus.APPROVED
+//                     : ParticipantStatus.PENDING,
+//                 joinedAt: autoApprove ? new Date() : undefined,
+//             },
+//         });
+
+//         // if pending -> notify owner about join request
+//         if (!autoApprove) {
+//             await sendNotification(
+//                 tx,
+//                 event.ownerId,
+//                 NotificationType.JOIN_REQUEST,
+//                 "New Join Request",
+//                 `Someone requested to join "${event.title}"`,
+//                 { eventId, userId },
+//             );
+//         }
+
+//         return created;
+//     });
+
+//     return participant;
+// };
+
+
+
+
 const joinEvent = async (eventId: string, userId: string) => {
-    const event = await prisma.event.findFirst({
-        where: { id: eventId, isDeleted: false, status: EventStatus.PUBLISHED },
-    });
+  const event = await prisma.event.findFirst({
+    where: {
+      id: eventId,
+      isDeleted: false,
+      status: EventStatus.PUBLISHED,
+    },
+  });
 
-    if (!event) throw new AppError(status.NOT_FOUND, "Event not found");
+  if (!event) throw new AppError(status.NOT_FOUND, "Event not found");
 
-    const existing = await prisma.eventParticipant.findUnique({
-        where: { eventId_userId: { eventId, userId } },
-    });
+  const existing = await prisma.eventParticipant.findUnique({
+    where: { eventId_userId: { eventId, userId } },
+  });
 
-    if (existing) {
-        if (existing.status === ParticipantStatus.BANNED)
-            throw new AppError(
-                status.FORBIDDEN,
-                "You have been banned from this event",
-            );
-
-        throw new AppError(
-            status.CONFLICT,
-            "You have already joined or requested to join this event",
-        );
+  if (existing) {
+    if (existing.status === ParticipantStatus.BANNED) {
+      throw new AppError(status.FORBIDDEN, "You have been banned from this event");
     }
 
-    const autoApprove =
-        event.visibility === EventVisibility.PUBLIC &&
-        event.feeType === EventFeeType.FREE;
+    throw new AppError(
+      status.CONFLICT,
+      "You have already joined or requested to join this event"
+    );
+  }
 
-    const participant = await prisma.$transaction(async (tx) => {
-        const created = await tx.eventParticipant.create({
-            data: {
-                eventId,
-                userId,
-                status: autoApprove
-                    ? ParticipantStatus.APPROVED
-                    : ParticipantStatus.PENDING,
-                joinedAt: autoApprove ? new Date() : undefined,
-            },
-        });
-
-        // if pending -> notify owner about join request
-        if (!autoApprove) {
-            await sendNotification(
-                tx,
-                event.ownerId,
-                NotificationType.JOIN_REQUEST,
-                "New Join Request",
-                `Someone requested to join "${event.title}"`,
-                { eventId, userId },
-            );
-        }
-
-        return created;
+  // ✅ PAID EVENT => create payment session first
+  if (event.feeType === EventFeeType.PAID) {
+    const paymentSession = await PaymentService.createPaymentSession(userId, {
+      eventId,
     });
 
-    return participant;
+    return {
+      status: "PAYMENT_REQUIRED",
+      payment: paymentSession,
+    };
+  }
+
+  // ✅ FREE EVENT => join directly
+  const autoApprove = event.visibility === EventVisibility.PUBLIC;
+
+  const participant = await prisma.$transaction(async (tx) => {
+    const created = await tx.eventParticipant.create({
+      data: {
+        eventId,
+        userId,
+        status: autoApprove
+          ? ParticipantStatus.APPROVED
+          : ParticipantStatus.PENDING,
+        joinedAt: autoApprove ? new Date() : undefined,
+      },
+    });
+
+    if (!autoApprove) {
+      await sendNotification(
+        tx,
+        event.ownerId,
+        NotificationType.JOIN_REQUEST,
+        "New Join Request",
+        `Someone requested to join "${event.title}"`,
+        { eventId, userId }
+      );
+    }
+
+    return created;
+  });
+
+  return participant;
 };
+
+
 
 const getEventParticipants = async (
     eventId: string,

@@ -140,10 +140,14 @@ const sslcommerzSuccess = async (query: any) => {
         include: { event: true },
     });
 
-    if (!payment)
+    if (!payment) {
         throw new AppError(status.NOT_FOUND, "Payment record not found");
+    }
 
-
+    // ✅ prevent duplicate success calls
+    if (payment.status === PaymentStatus.PAID) {
+        return payment;
+    }
 
     const updated = await prisma.$transaction(async (tx) => {
         const updatedPayment = await tx.payment.update({
@@ -151,10 +155,13 @@ const sslcommerzSuccess = async (query: any) => {
             data: {
                 status: PaymentStatus.PAID,
                 paidAt: new Date(),
+                gatewayResponse: query,
             },
         });
 
-        // create participant as pending approval
+        // ✅ public paid => auto approve, private paid => pending
+        const autoApprove = payment.event.visibility === EventVisibility.PUBLIC;
+
         await tx.eventParticipant.upsert({
             where: {
                 eventId_userId: {
@@ -165,11 +172,17 @@ const sslcommerzSuccess = async (query: any) => {
             create: {
                 eventId: payment.eventId,
                 userId: payment.userId,
-                status: ParticipantStatus.PENDING,
+                status: autoApprove
+                    ? ParticipantStatus.APPROVED
+                    : ParticipantStatus.PENDING,
+                joinedAt: autoApprove ? new Date() : undefined,
                 paymentId: payment.id,
             },
             update: {
-                status: ParticipantStatus.PENDING,
+                status: autoApprove
+                    ? ParticipantStatus.APPROVED
+                    : ParticipantStatus.PENDING,
+                joinedAt: autoApprove ? new Date() : undefined,
                 paymentId: payment.id,
             },
         });
@@ -188,20 +201,22 @@ const sslcommerzSuccess = async (query: any) => {
             },
         });
 
-        // notification for event owner
-        await tx.notification.create({
-            data: {
-                userId: payment.event.ownerId,
-                type: NotificationType.JOIN_REQUEST,
-                title: "New Paid Join Request",
-                message: `A user has paid and requested to join "${payment.event.title}".`,
-                metadata: {
-                    eventId: payment.eventId,
-                    paymentId: payment.id,
-                    userId: payment.userId,
+        // notification for event owner (only if pending approval)
+        if (!autoApprove) {
+            await tx.notification.create({
+                data: {
+                    userId: payment.event.ownerId,
+                    type: NotificationType.JOIN_REQUEST,
+                    title: "New Paid Join Request",
+                    message: `A user has paid and requested to join "${payment.event.title}".`,
+                    metadata: {
+                        eventId: payment.eventId,
+                        paymentId: payment.id,
+                        userId: payment.userId,
+                    },
                 },
-            },
-        });
+            });
+        }
 
         return updatedPayment;
     });
