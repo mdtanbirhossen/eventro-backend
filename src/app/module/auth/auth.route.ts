@@ -19,4 +19,10 @@ router.post(
     checkAuth(Role.ADMIN, Role.USER),
     AuthController.logoutUser,
 );
+
+router.patch(
+    "/me",
+    checkAuth(Role.ADMIN, Role.USER),
+    AuthController.updateProfile,
+);
 export const AuthRoutes = router;

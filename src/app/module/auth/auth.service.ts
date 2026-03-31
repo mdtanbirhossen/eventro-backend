@@ -12,6 +12,7 @@ import {
     IChangePasswordPayload,
     ILoginUserPayload,
     IRegisterUserPayload,
+    IUpdateProfilePayload,
 } from "./auth.interface";
 
 const register = async (payload: IRegisterUserPayload) => {
@@ -254,6 +255,36 @@ const logoutUser = async (sessionToken: string) => {
     return result;
 };
 
+const updateProfile = async (
+    user: IRequestUser,
+    payload: IUpdateProfilePayload,
+) => {
+    const isUserExists = await prisma.user.findUnique({
+        where: {
+            id: user.userId,
+        },
+    });
+
+    if (!isUserExists) {
+        throw new AppError(status.NOT_FOUND, "User not found");
+    }
+
+    if (isUserExists.isDeleted || isUserExists.status === UserStatus.DELETED) {
+        throw new AppError(status.BAD_REQUEST, "User is deleted");
+    }
+
+    const updatedUser = await prisma.user.update({
+        where: {
+            id: user.userId,
+        },
+        data: {
+            ...payload,
+        },
+    });
+
+    return updatedUser;
+};
+
 export const AuthService = {
     register,
     loginUser,
@@ -261,4 +292,5 @@ export const AuthService = {
     getNewToken,
     changePassword,
     logoutUser,
+    updateProfile
 };
