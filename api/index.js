@@ -4117,16 +4117,18 @@ var createPaymentSession2 = catchAsync(async (req, res) => {
   });
 });
 var sslcommerzSuccess2 = catchAsync(async (req, res) => {
+  console.log("query from ssl success", req.query);
+  console.log("body from ssl success", req.body);
   await PaymentService.sslcommerzSuccess(req.query);
-  res.redirect("http://localhost:3000/payment-success");
+  res.redirect(`${envVars.FRONTEND_URL}/payment-success`);
 });
 var sslcommerzFail2 = catchAsync(async (req, res) => {
   await PaymentService.sslcommerzFail(req.query);
-  res.redirect("http://localhost:3000/payment-failed");
+  res.redirect(`${envVars.FRONTEND_URL}/payment-failed`);
 });
 var sslcommerzCancel2 = catchAsync(async (req, res) => {
   await PaymentService.sslcommerzCancel(req.query);
-  res.redirect("http://localhost:3000/payment-cancelled");
+  res.redirect(`${envVars.FRONTEND_URL}/payment-cancelled`);
 });
 var getMyPayments2 = catchAsync(async (req, res) => {
   const result = await PaymentService.getMyPayments(req.user.userId);
@@ -4261,18 +4263,24 @@ var app = express();
 app.set("query parser", (str) => qs.parse(str));
 app.set("view engine", "ejs");
 app.set("views", path2.resolve(process.cwd(), `src/app/templates`));
+app.use("/api/v1/payment/sslcommerz", (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  next();
+});
 app.use(
   cors({
     origin: function(origin, callback) {
       const allowedOrigins = [
         process.env.FRONTEND_URL,
-        process.env.PROD_CLIENT_URL
+        process.env.PROD_CLIENT_URL,
+        "https://sandbox.sslcommerz.com",
+        "https://securepay.sslcommerz.com"
       ];
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(null, false);
       }
     },
     credentials: true
@@ -4287,7 +4295,7 @@ app.use("/api/v1", IndexRoutes);
 app.get("/", async (req, res) => {
   res.status(201).json({
     success: true,
-    message: "API is working"
+    message: "Welcome in Eventro Backend"
   });
 });
 app.use(globalErrorHandler);
