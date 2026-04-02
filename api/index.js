@@ -2287,6 +2287,19 @@ var getMyPayments = async (userId) => {
     orderBy: { createdAt: "desc" }
   });
 };
+var getPaymentByTransactionId = async (transactionId) => {
+  const payment = await prisma.payment.findUnique({
+    where: { transactionId },
+    include: {
+      user: true,
+      event: true
+    }
+  });
+  if (!payment) {
+    throw new AppError_default(status16.NOT_FOUND, "Payment not found");
+  }
+  return payment;
+};
 var getAllPaymentsAdmin = async () => {
   return prisma.payment.findMany({
     include: {
@@ -2302,7 +2315,8 @@ var PaymentService = {
   sslcommerzFail,
   sslcommerzCancel,
   getMyPayments,
-  getAllPaymentsAdmin
+  getAllPaymentsAdmin,
+  getPaymentByTransactionId
 };
 
 // src/app/module/event/event.service.ts
@@ -4120,15 +4134,21 @@ var sslcommerzSuccess2 = catchAsync(async (req, res) => {
   console.log("query from ssl success", req.query);
   console.log("body from ssl success", req.body);
   await PaymentService.sslcommerzSuccess(req.query);
-  res.redirect(`${envVars.FRONTEND_URL}/payment-success`);
+  res.redirect(
+    `${envVars.FRONTEND_URL}/payment-success?tran_id=${req.body.tran_id}`
+  );
 });
 var sslcommerzFail2 = catchAsync(async (req, res) => {
   await PaymentService.sslcommerzFail(req.query);
-  res.redirect(`${envVars.FRONTEND_URL}/payment-failed`);
+  res.redirect(
+    `${envVars.FRONTEND_URL}/payment-failed?tran_id=${req.body.tran_id}&status=failed`
+  );
 });
 var sslcommerzCancel2 = catchAsync(async (req, res) => {
   await PaymentService.sslcommerzCancel(req.query);
-  res.redirect(`${envVars.FRONTEND_URL}/payment-cancelled`);
+  res.redirect(
+    `${envVars.FRONTEND_URL}/payment-failed?tran_id=${req.body.tran_id}&status=cancelled`
+  );
 });
 var getMyPayments2 = catchAsync(async (req, res) => {
   const result = await PaymentService.getMyPayments(req.user.userId);
@@ -4148,22 +4168,50 @@ var getAllPaymentsAdmin2 = catchAsync(async (req, res) => {
     data: result
   });
 });
+var getPaymentByTransactionId2 = catchAsync(
+  async (req, res) => {
+    const { transactionId } = req.params;
+    const result = await PaymentService.getPaymentByTransactionId(
+      transactionId
+    );
+    sendResponse(res, {
+      httpStatusCode: status25.OK,
+      success: true,
+      message: "Payment fetched successfully",
+      data: result
+    });
+  }
+);
 var PaymentController = {
   createPaymentSession: createPaymentSession2,
   sslcommerzSuccess: sslcommerzSuccess2,
   sslcommerzFail: sslcommerzFail2,
   sslcommerzCancel: sslcommerzCancel2,
   getMyPayments: getMyPayments2,
-  getAllPaymentsAdmin: getAllPaymentsAdmin2
+  getAllPaymentsAdmin: getAllPaymentsAdmin2,
+  getPaymentByTransactionId: getPaymentByTransactionId2
 };
 
 // src/app/module/payment/payment.route.ts
 var router9 = Router9();
-router9.post("/create-session", checkAuth(Role.USER, Role.ADMIN), PaymentController.createPaymentSession);
+router9.post(
+  "/create-session",
+  checkAuth(Role.USER, Role.ADMIN),
+  PaymentController.createPaymentSession
+);
 router9.post("/sslcommerz/success", PaymentController.sslcommerzSuccess);
 router9.post("/sslcommerz/fail", PaymentController.sslcommerzFail);
 router9.post("/sslcommerz/cancel", PaymentController.sslcommerzCancel);
-router9.get("/my", checkAuth(Role.USER, Role.ADMIN), PaymentController.getMyPayments);
+router9.get(
+  "/my",
+  checkAuth(Role.USER, Role.ADMIN),
+  PaymentController.getMyPayments
+);
+router9.get(
+  "/transaction/:transactionId",
+  checkAuth(Role.USER, Role.ADMIN),
+  PaymentController.getPaymentByTransactionId
+);
 router9.get("/", checkAuth(Role.ADMIN), PaymentController.getAllPaymentsAdmin);
 var PaymentRoutes = router9;
 

@@ -293,6 +293,22 @@ const getMyPayments = async (userId: string) => {
     });
 };
 
+const getPaymentByTransactionId = async (transactionId: string) => {
+    const payment = await prisma.payment.findUnique({
+        where: { transactionId },
+        include: {
+            user: true,
+            event: true,
+        },
+    });
+
+    if (!payment) {
+        throw new AppError(status.NOT_FOUND, "Payment not found");
+    }
+
+    return payment;
+};
+
 const getAllPaymentsAdmin = async () => {
     return prisma.payment.findMany({
         include: {
@@ -310,4 +326,5 @@ export const PaymentService = {
     sslcommerzCancel,
     getMyPayments,
     getAllPaymentsAdmin,
+    getPaymentByTransactionId
 };

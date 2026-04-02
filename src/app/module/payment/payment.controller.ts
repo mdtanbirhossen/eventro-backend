@@ -20,24 +20,30 @@ const createPaymentSession = catchAsync(async (req: Request, res: Response) => {
 });
 
 const sslcommerzSuccess = catchAsync(async (req: Request, res: Response) => {
-    console.log("query from ssl success",req.query)
-    console.log("body from ssl success",req.body)
+    console.log("query from ssl success", req.query);
+    console.log("body from ssl success", req.body);
 
     await PaymentService.sslcommerzSuccess(req.query);
 
-    res.redirect(`${envVars.FRONTEND_URL}/payment-success`);
+    res.redirect(
+        `${envVars.FRONTEND_URL}/payment-success?tran_id=${req.body.tran_id}`,
+    );
 });
 
 const sslcommerzFail = catchAsync(async (req: Request, res: Response) => {
     await PaymentService.sslcommerzFail(req.query);
 
-    res.redirect(`${envVars.FRONTEND_URL}/payment-failed`);
+    res.redirect(
+        `${envVars.FRONTEND_URL}/payment-failed?tran_id=${req.body.tran_id}&status=failed`,
+    );
 });
 
 const sslcommerzCancel = catchAsync(async (req: Request, res: Response) => {
     await PaymentService.sslcommerzCancel(req.query);
 
-    res.redirect(`${envVars.FRONTEND_URL}/payment-cancelled`);
+    res.redirect(
+        `${envVars.FRONTEND_URL}/payment-failed?tran_id=${req.body.tran_id}&status=cancelled`,
+    );
 });
 
 const getMyPayments = catchAsync(async (req: Request, res: Response) => {
@@ -62,6 +68,23 @@ const getAllPaymentsAdmin = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getPaymentByTransactionId = catchAsync(
+    async (req: Request, res: Response) => {
+        const { transactionId } = req.params;
+
+        const result = await PaymentService.getPaymentByTransactionId(
+            transactionId as string,
+        );
+
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Payment fetched successfully",
+            data: result,
+        });
+    },
+);
+
 export const PaymentController = {
     createPaymentSession,
     sslcommerzSuccess,
@@ -69,4 +92,5 @@ export const PaymentController = {
     sslcommerzCancel,
     getMyPayments,
     getAllPaymentsAdmin,
+    getPaymentByTransactionId
 };
