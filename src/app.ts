@@ -18,12 +18,24 @@ app.set("query parser", (str: string) => qs.parse(str));
 app.set("view engine", "ejs");
 app.set("views", path.resolve(process.cwd(), `src/app/templates`));
 
+// app.use(
+//   "/api/v1/payment/sslcommerz",
+//   cors({ origin: "*", credentials: false }) // SSLCommerz hits these, not the browser
+// );
+
+app.use("/api/v1/payment/sslcommerz", (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  next();
+});
+
 app.use(
     cors({
         origin: function (origin, callback) {
             const allowedOrigins = [
                 process.env.FRONTEND_URL,
                 process.env.PROD_CLIENT_URL,
+                "https://sandbox.sslcommerz.com",
+                "https://securepay.sslcommerz.com",
             ];
 
             if (!origin) return callback(null, true);
@@ -31,7 +43,7 @@ app.use(
             if (allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
-                callback(new Error("Not allowed by CORS"));
+                callback(null, false);
             }
         },
         credentials: true,

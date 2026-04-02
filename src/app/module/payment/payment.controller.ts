@@ -3,6 +3,7 @@ import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
 import { PaymentService } from "./payment.service";
+import { envVars } from "../../config/env";
 
 const createPaymentSession = catchAsync(async (req: Request, res: Response) => {
     const result = await PaymentService.createPaymentSession(
@@ -19,21 +20,24 @@ const createPaymentSession = catchAsync(async (req: Request, res: Response) => {
 });
 
 const sslcommerzSuccess = catchAsync(async (req: Request, res: Response) => {
+    console.log("query from ssl success",req.query)
+    console.log("body from ssl success",req.body)
+
     await PaymentService.sslcommerzSuccess(req.query);
 
-    res.redirect("http://localhost:3000/payment-success");
+    res.redirect(`${envVars.FRONTEND_URL}/payment-success`);
 });
 
 const sslcommerzFail = catchAsync(async (req: Request, res: Response) => {
     await PaymentService.sslcommerzFail(req.query);
 
-    res.redirect("http://localhost:3000/payment-failed");
+    res.redirect(`${envVars.FRONTEND_URL}/payment-failed`);
 });
 
 const sslcommerzCancel = catchAsync(async (req: Request, res: Response) => {
     await PaymentService.sslcommerzCancel(req.query);
 
-    res.redirect("http://localhost:3000/payment-cancelled");
+    res.redirect(`${envVars.FRONTEND_URL}/payment-cancelled`);
 });
 
 const getMyPayments = catchAsync(async (req: Request, res: Response) => {

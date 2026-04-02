@@ -39,7 +39,7 @@ A robust REST API for the Eventro event management platform, built with Express,
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/eventro-backend.git
+git clone https://github.com/mdtanbirhossen/eventro-backend.git
 cd eventro-backend
 ```
 
